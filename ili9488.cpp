@@ -24,19 +24,26 @@ void InitILI9488()
   // Do the initialization with a very low SPI bus speed, so that it will succeed even if the bus speed chosen by the user is too high.
   spi->clk = 34;
   __sync_synchronize();
+  
+  bool SPI_CS_BIT = 0;
+#if defined(DISPLAY_USES_CE1) && NUM_DISPLAY_LOOPS < 2
+  SPI_CS_BIT = 1;
+#endif
 
-  BEGIN_SPI_COMMUNICATION();
+  for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
+  {
+      BEGIN_SPI_COMMUNICATION(SPI_CS_BIT);
   {
       //0xE0 - PGAMCTRL Positive Gamma Control
-      SPI_TRANSFER(0xE0, 0x00, 0x03, 0x09, 0x08, 0x16, 0x0A, 0x3F, 0x78, 0x4C, 0x09, 0x0A, 0x08, 0x16, 0x1A, 0x0F);
+      SPI_TRANSFER(SPI_CS_BIT, 0xE0, 0x00, 0x03, 0x09, 0x08, 0x16, 0x0A, 0x3F, 0x78, 0x4C, 0x09, 0x0A, 0x08, 0x16, 0x1A, 0x0F);
       //0xE1 - NGAMCTRL Negative Gamma Control
-      SPI_TRANSFER(0xE1, 0x00, 0x16, 0x19, 0x03, 0x0F, 0x05, 0x32, 0x45, 0x46, 0x04, 0x0E, 0x0D, 0x35, 0x37, 0x0F);
+      SPI_TRANSFER(SPI_CS_BIT, 0xE1, 0x00, 0x16, 0x19, 0x03, 0x0F, 0x05, 0x32, 0x45, 0x46, 0x04, 0x0E, 0x0D, 0x35, 0x37, 0x0F);
       // 0xC0 Power Control 1
-      SPI_TRANSFER(0xC0, 0x17, 0x15);
+      SPI_TRANSFER(SPI_CS_BIT, 0xC0, 0x17, 0x15);
       // 0xC1 Power Control 2
-      SPI_TRANSFER(0xC1, 0x41);
+      SPI_TRANSFER(SPI_CS_BIT, 0xC1, 0x41);
       // 0xC5 VCOM Control
-      SPI_TRANSFER(0xC5, 0x00, 0x12, 0x80);
+      SPI_TRANSFER(SPI_CS_BIT, 0xC5, 0x00, 0x12, 0x80);
 
 // Memory access control. Determines display orientation,
 // display color filter and refresh order/direction.
@@ -67,14 +74,14 @@ void InitILI9488()
     // 0x80 180 deg (W = 320, H = 480, FPC connector on top)
     // 0xE0 270 deg (W = 480, H = 320, FPC connector on left)
       // 0x36 Memory Access Control - sets display rotation.
-      SPI_TRANSFER(0x36, madctl);
+      SPI_TRANSFER(SPI_CS_BIT, 0x36, madctl);
 
       // 0x3A Interface Pixel Format (bit depth color space)
-      SPI_TRANSFER(0x3A, 0x66);
+      SPI_TRANSFER(SPI_CS_BIT, 0x3A, 0x66);
       // 0xB0 Interface Mode Control
-      SPI_TRANSFER(0xB0, 0x80);
+      SPI_TRANSFER(SPI_CS_BIT, 0xB0, 0x80);
       // 0xB1 Frame Rate Control (in Normal Mode/Full Colors)
-      SPI_TRANSFER(0xB1, 0xA0);
+      SPI_TRANSFER(SPI_CS_BIT, 0xB1, 0xA0);
 
 // The display inversion is controlled by two registers:
 // 0xB4 determines how the LEDs are swapped.See page 224 of the datasheet:
@@ -89,42 +96,49 @@ void InitILI9488()
 // the original test value was set to.
 #ifdef DISPLAY_INVERT_COLORS
       // 0xB4 Display Inversion Control.
-      SPI_TRANSFER(0xB4, 0x02);
+      SPI_TRANSFER(SPI_CS_BIT, 0xB4, 0x02);
       // 0x21 Display Inversion ON.
-      SPI_TRANSFER(0x21);
+      SPI_TRANSFER(SPI_CS_BIT, 0x21);
 #else
       // 0xB4 Display Inversion Control.
-      SPI_TRANSFER(0xB4, 0x02);
+      SPI_TRANSFER(SPI_CS_BIT, 0xB4, 0x02);
       // 0x20 Display Inversion OFF.
-      SPI_TRANSFER(0x20);
+      SPI_TRANSFER(SPI_CS_BIT, 0x20);
 #endif
 
       // 0xB6 Display Function Control.
-      SPI_TRANSFER(0xB6, 0x02, 0x02);
+      SPI_TRANSFER(SPI_CS_BIT, 0xB6, 0x02, 0x02);
       // 0xE9 Set Image Function.
-      SPI_TRANSFER(0xE9, 0x00);
+      SPI_TRANSFER(SPI_CS_BIT, 0xE9, 0x00);
       // 0xF7 Adjuist Control 3
-      SPI_TRANSFER(0xF7, 0xA9, 0x51, 0x2C, 0x82);
+      SPI_TRANSFER(SPI_CS_BIT, 0xF7, 0xA9, 0x51, 0x2C, 0x82);
       // 0x11 Exit Sleep Mode. (Sleep OUT)
-      SPI_TRANSFER(0x11);
+      SPI_TRANSFER(SPI_CS_BIT, 0x11);
       usleep(120*1000);
       // 0x29 Display ON.
-      SPI_TRANSFER(0x29);
+      SPI_TRANSFER(SPI_CS_BIT, 0x29);
       // 0x38 Idle Mode OFF.
-      SPI_TRANSFER(0x38);
+      SPI_TRANSFER(SPI_CS_BIT, 0x38);
       // 0x13 Normal Display Mode ON.
-      SPI_TRANSFER(0x13);
+      SPI_TRANSFER(SPI_CS_BIT, 0x13);
 
 #if defined(GPIO_TFT_BACKLIGHT) && defined(BACKLIGHT_CONTROL)
     printf("Setting TFT backlight on at pin %d\n", GPIO_TFT_BACKLIGHT);
     TurnBacklightOn();
 #endif
 
-    ClearScreen();
-  }
+    ClearScreen(SPI_CS_BIT);
+
 #ifndef USE_DMA_TRANSFERS // For DMA transfers, keep SPI CS & TA active.
-  END_SPI_COMMUNICATION();
+      END_SPI_COMMUNICATION(SPI_CS_BIT);
+#else
+      if (NUM_DISPLAY_LOOPS==2 && DISPLAY_LOOP==0)
+      {
+        END_SPI_COMMUNICATION(SPI_CS_BIT);
+      }
 #endif
+      }
+    }
 
   // And speed up to the desired operation speed finally after init is done.
   usleep(10 * 1000); // Delay a bit before restoring CLK, or otherwise this has been observed to cause the display not init if done back to back after the clear operation above.
@@ -150,25 +164,35 @@ void TurnBacklightOn()
 void TurnDisplayOff()
 {
   TurnBacklightOff();
-  QUEUE_SPI_TRANSFER(0x28/*Display OFF*/);
-  QUEUE_SPI_TRANSFER(0x10/*Enter Sleep Mode*/);
+  for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
+    {
+    QUEUE_SPI_TRANSFER(SPI_CS_BIT, 0x28/*Display OFF*/);
+    QUEUE_SPI_TRANSFER(SPI_CS_BIT, 0x10/*Enter Sleep Mode*/);
+  } //end DISPLAY_LOOP
   usleep(120*1000); // Sleep off can be sent 120msecs after entering sleep mode the earliest, so synchronously sleep here for that duration to be safe.
 }
 
 void TurnDisplayOn()
 {
   TurnBacklightOff();
-  QUEUE_SPI_TRANSFER(0x11/*Sleep Out*/);
-  usleep(120 * 1000);
-  QUEUE_SPI_TRANSFER(0x29/*Display ON*/);
-  usleep(120 * 1000);
+for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
+  {
+    QUEUE_SPI_TRANSFER(SPI_CS_BIT, 0x11/*Sleep Out*/);
+    usleep(120 * 1000);
+    QUEUE_SPI_TRANSFER(SPI_CS_BIT, 0x29/*Display ON*/);
+    usleep(120 * 1000);
+  } //end DISPLAY_LOOP
   TurnBacklightOn();
 }
 
 void DeinitSPIDisplay()
 {
-  ClearScreen();
-  TurnDisplayOff();
+   for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
+  {
+    ClearScreen(SPI_CS_BIT); 
+    TurnDisplayOff();
+  } //end DISPLAY_
+ 
 }
 
 #endif
