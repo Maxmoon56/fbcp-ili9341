@@ -26,10 +26,6 @@ void InitILI9488()
   __sync_synchronize();
   
   bool SPI_CS_BIT = 0;
-#if defined(DISPLAY_USES_CE1) && NUM_DISPLAY_LOOPS < 2
-  SPI_CS_BIT = 1;
-#endif
-
   for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
   {
       BEGIN_SPI_COMMUNICATION(SPI_CS_BIT);
@@ -164,6 +160,7 @@ void TurnBacklightOn()
 void TurnDisplayOff()
 {
   TurnBacklightOff();
+   bool SPI_CS_BIT = 0;
   for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
     {
     QUEUE_SPI_TRANSFER(SPI_CS_BIT, 0x28/*Display OFF*/);
@@ -175,6 +172,7 @@ void TurnDisplayOff()
 void TurnDisplayOn()
 {
   TurnBacklightOff();
+   bool SPI_CS_BIT = 0;
 for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
   {
     QUEUE_SPI_TRANSFER(SPI_CS_BIT, 0x11/*Sleep Out*/);
@@ -187,6 +185,7 @@ for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++,
 
 void DeinitSPIDisplay()
 {
+   bool SPI_CS_BIT = 0;
    for (uint8_t DISPLAY_LOOP = 0; DISPLAY_LOOP < NUM_DISPLAY_LOOPS; DISPLAY_LOOP++, SPI_CS_BIT = !SPI_CS_BIT)
   {
     ClearScreen(SPI_CS_BIT); 
