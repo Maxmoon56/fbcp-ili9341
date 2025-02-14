@@ -1,5 +1,6 @@
 #pragma once
 
+#define DILI9488 ON
 #define GPIO_TFT_DATA_CONTROL 24
 #define GPIO_TFT_RESET_PIN 25
 #define NUM_DISPLAY_LOOPS 2
