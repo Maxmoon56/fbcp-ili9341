@@ -1,5 +1,9 @@
 #pragma once
 
+#define DISPLAY_FLIP_ORIENTATION_ON_SOFTWARE
+#define DISPLAY_FLIP_ORIENTATION_ON_HARDWARE
+#define DISPLAY_SWAP_BGR 
+#define DISPLAY_ROTATE_180_DEGREES ON
 #define DILI9488 ON
 #define GPIO_TFT_DATA_CONTROL 24
 #define GPIO_TFT_RESET_PIN 25
@@ -12,7 +16,7 @@
 #define DISPLAY_USES_CS1
 #define NO_INTERLACING
 #define DISPLAY_SPI_DRIVE_SETTINGS (0) 
-#define ALL_TASKS_SHOULD_DMA //used for 'without diffing'
+//#define ALL_TASKS_SHOULD_DMA //used for 'without diffing'
 #define UPDATE_FRAMES_WITHOUT_DIFFING //requires 'all tasks dma'
 //#define USE_DMA_TRANSFERS //already defined (default ON in cmakelists)
 
